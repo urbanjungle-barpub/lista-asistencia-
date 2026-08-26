@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0049)file:///C:/Users/Franco/Downloads/Asistencia.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -450,10 +449,9 @@
 <div class="toast" id="toast">✔ Ingresó: Mariano Cruz</div>
 
 <script>
-  // ⚠️ Pegá acá la URL /exec que te da Apps Script al implementar como Web App
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMmWkkPh-OrfM0zh6NKa2j8Z62Vv914SdZs_5R4a85MGgGJSuG8eBQ5Ui7Vy_BP30E/exec';
 
-  let allGuests = [];       // organicos + anuncios combinados
+  let allGuests = [];       //
   let currentFilter = 'todos';
   let searchTerm = '';
   let jsonpCounter = 0;
@@ -516,8 +514,7 @@
     render();
 
     try {
-      // JSONP por GET (evita el bug de fetch+no-cors donde Apps Script
-      // redirige el POST y el navegador lo convierte en GET sin datos)
+  
       const result = await jsonpRequest({
         action: 'checkin',
         origen: guest.origen,
@@ -527,7 +524,7 @@
       if (result.error) throw new Error(result.error);
 
       showToast((nuevoEstado ? '✔ Ingresó: ' : '↺ Desmarcado: ') + guest.nombre);
-      // Refresca desde la planilla para tener la hora real de check-in
+      
       setTimeout(() => loadGuests(true), 500);
     } catch(err){
       guest.asistio = !nuevoEstado; // revertir si falla
@@ -550,7 +547,7 @@
   }
 
   function render(){
-    // Stats globales
+    
     const total = allGuests.length;
     const presentes = allGuests.filter(g => g.asistio).length;
     document.getElementById('statTotal').textContent = total;
@@ -564,7 +561,7 @@
     document.getElementById('anuTotal').textContent = anuncios.length;
     document.getElementById('anuPresentes').textContent = anuncios.filter(g => g.asistio).length;
 
-    // Lista filtrada, ordenada: pendientes primero, luego alfabético
+    
     const filtered = allGuests.filter(matchesFilter).sort((a, b) => {
       if (a.asistio !== b.asistio) return a.asistio ? 1 : -1;
       return (a.nombre || '').localeCompare(b.nombre || '');
@@ -622,7 +619,7 @@
     });
   });
 
-  // Auto-refresh cada 20s para ver check-ins de otros dispositivos en la puerta
+  
   loadGuests(false);
   setInterval(() => loadGuests(true), 20000);
 </script>

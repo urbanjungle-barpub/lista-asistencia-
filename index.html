@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)file:///C:/Users/Franco/Downloads/Asistencia.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sunset The Drop — Check-in</title>
+<style>
+  :root{
+    --bg:#07120d;
+    --bg2:#0c1a13;
+    --card:#10231a;
+    --card-hover:#15301f;
+    --border:#1f3d2b;
+    --text:#eafff0;
+    --muted:#8fb39e;
+    --orange:#2fd977;
+    --pink:#7be89a;
+    --gold:#c8e86b;
+    --green:#3ddc84;
+    --green-dim:#123a25;
+    --purple:#1f9e63;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(47,217,119,.18), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(31,158,99,.20), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+
+  header{
+    padding:28px 20px 18px;
+    text-align:center;
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:linear-gradient(180deg, rgba(13,11,20,.98) 60%, rgba(13,11,20,.85) 90%, transparent);
+    backdrop-filter:blur(6px);
+  }
+  .logo{
+    height:64px;
+    width:auto;
+    display:block;
+    margin:0 auto 10px;
+    filter:drop-shadow(0 0 14px rgba(47,217,119,.35));
+  }
+  h1{
+    margin:0;
+    font-size:26px;
+    background:linear-gradient(90deg, var(--green), var(--gold));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    font-weight:800;
+    letter-spacing:.5px;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:4px;
+  }
+
+  .stats{
+    max-width:640px;
+    margin:18px auto 0;
+    padding:0 16px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 8px;
+    text-align:center;
+  }
+  .stat .num{
+    font-size:22px;
+    font-weight:800;
+    line-height:1;
+  }
+  .stat .label{
+    font-size:10.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-top:5px;
+  }
+  .stat.total .num{color:var(--purple);}
+  .stat.presentes .num{color:var(--green);}
+  .stat.pendientes .num{color:var(--gold);}
+
+  .breakdown{
+    max-width:640px;
+    margin:10px auto 0;
+    padding:0 16px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .bd{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .bd .tag{font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px;}
+  .bd .dot{width:8px;height:8px;border-radius:50%;}
+  .dot.org{background:var(--gold);}
+  .dot.anu{background:var(--purple);}
+  .bd .count{font-size:14px; color:var(--muted); font-weight:700;}
+  .bd .count b{color:var(--text);}
+
+  .controls{
+    max-width:640px;
+    margin:16px auto 0;
+    padding:0 16px;
+  }
+  .search{
+    width:100%;
+    padding:13px 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+  }
+  .search:focus{border-color:var(--orange);}
+  .search::placeholder{color:var(--muted);}
+
+  .filters{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .filters::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .chip.active{
+    background:linear-gradient(90deg, var(--orange), var(--pink));
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .list{
+    max-width:640px;
+    margin:16px auto 0;
+    padding:0 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .guest{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:background .15s, opacity .15s, transform .1s;
+  }
+  .guest.presente{
+    background:var(--green-dim);
+    border-color:rgba(61,220,132,.35);
+  }
+  .guest.updating{opacity:.55;}
+  .guest:active{transform:scale(.99);}
+
+  .g-info{flex:1; min-width:0;}
+  .g-name{
+    font-weight:700;
+    font-size:15px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .g-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:4px;
+    flex-wrap:wrap;
+  }
+  .g-phone{font-size:12.5px; color:var(--muted);}
+  .badge{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .badge.org{background:rgba(200,232,107,.18); color:var(--gold);}
+  .badge.anu{background:rgba(31,158,99,.28); color:#7be89a;}
+  .check-time{font-size:11px; color:var(--green);}
+
+  .toggle-btn{
+    flex:0 0 auto;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:2px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+  .toggle-btn.on{
+    background:var(--green);
+    border-color:var(--green);
+    color:#0d0b14;
+  }
+
+  .empty, .loading{
+    text-align:center;
+    color:var(--muted);
+    padding:40px 20px;
+    font-size:14px;
+  }
+  .loading .spinner{
+    width:26px;height:26px;
+    border:3px solid var(--border);
+    border-top-color:var(--orange);
+    border-radius:50%;
+    margin:0 auto 12px;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#252041;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 18px;
+    border-radius:12px;
+    font-size:13px;
+    opacity:0;
+    transition:all .25s;
+    pointer-events:none;
+    z-index:50;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAV0AAADqCAMAAAA27mb8AAAACVBMVEX////+/v4AAADAdF6cAAAAA3RSTlP//wDXyg1BAAAACXBIWXMAAAsSAAALEgHS3X78AAAOO0lEQVR4nO1d67rjKght/Ob9H9lMEzXxhoIiod1dP87Z0xgvS0RFMP/M64B9QTDXX4g0cJJWxgmALLbXa0fm0M+MUJ05/PP/34DncZMQaaAklZcs0CIwi/wBmAMms6I6ld9mRM6l+Ac8XY6j3XZKYlwOa4TuLqGGvsj5FI+xe2Db5/g92jadhYdd0UuPsnuSM9kqhizObGqqYRqs7Fq82g3Y5rlhyIIKbIHPyu6Lh941w7pRIFbQH2eXRfS2ehYDY4kXz7PLo/LElQMKCtjloOYB3YuBBnY5hHfNnA8C2Zca2IXUJg2SwovtSxXsckBYeHHQwS6L8E5iRRV0sMuByR5aIvta2FUgvCTg6quE3SWSQ7E2E4GsrxJ2WVDI09NbNT3scuwoOOrBCi3sdqnxzx8XRxK0sNvHKdv2IFkFw6ix9jnsnjiatHCywgOnhj6M3Q+DELsIrSm14t0FNYuU7F5uE1DTCDP+DuUx1UErduOymsFwKE0D5SG7JMN0xk/vDgLVlV/MLnSqZuSO28TZBZXmN0KaXVBpfiW+WDMsBmaN8WN3Jf4cu6Krto9hN5oM5yZ9Izizfgy7jDtlaGallvBO3+nnz2F3OahbPUT6T2T3cec7ND6RXQipLGlYWH8Tu5mLvwIJV8OuviPHPrrToBp2V8buLEJ/WpNml0EbalCoSIjLLoM2VKBQkZBh9xpCK0VXoeYWkl2vVC0qfLEDUHTRmhvaSpO3gz1hEWI3VAMe1MiGwf2Dw94oh3wu131Bht2DkemTbnsaCMBMFCoGwVmtyS2CmjMkuJVJKpUqVhZa1rsYxUDrHw0rCx3szo/qXeVuRAe709Q8RG5vWlPB7rTo6pRcErsLvSzmuNnVGik0yO6k6GoV3JcOdufYGSKX69yyk40CdlvbJwwGXgfOLdmdTJ9nd3pKq147pGIz8Ti78zMScO2Qhs3E0+yyzEjb5MVm6/C07PIAfbXIrI4n4mF2uW5cURhneaDD7vK+ZqNXZZD845qB7b4gjfQ+zi7XoFapG55nl2tQa9QNCtjVNKiZa6KBXZzq7QbDMggvTr3gjRQa2EXSG4JhVezCcBD1FoEv3cZPSabB791HOswMot4ilsfuh4oTXirg6HZIagbToJekMz8mXlNU78KBlqTVKkO8plCssPANAp8T8sACFWsGLqjbUHwVu2LAKv4fuwNAK/4fuwmYdcuP3ZWgsMsw4z+8aJC2UlLY/YLlFNe4R05r36kZVssBdlr7Tna14MfuSvxZdkUsQX+MXTa7L65z/ha7bPKKnNb+FrsIsG7WhNlVv2TmdYvw7P41w6sQvlIzSIgKalrrsavNHq0FuGmtw65K76zPgRLN8KWdSGAXGgsszHynAqLILqTH1TAjOgIw01qX3Y+a1gTriprWeuz+vWmNU5zwmkGJ49trcU1YxanP7tWXenZzemrSQZfd0JcfILrCSgwxrV3sgmndEb8ap+TWtU6iEzBmWgvsNtJu56PnyfU17FdEj0UKM6u1KysVHKqGMgKU7IQ5IBwDjMEXsdtFPuvNjob+tHaz+zHu8uPgvW0PMa1d7I66y6vZy6mpSIR5zaBG2zFVhNPJNGL3s1WDRtGN2B1TDXoa9cAY6srjtGZQoxjk0ZfHiN2RU3c1oqumIglmZVeN6N4VgYTkgd1GzC5deNVIjJqKpEhll7xsUCi6+FemrT3dHBJ2qcsGNRKj0MRwItO7JOFVczWrml7OkbLbivEvwEnu1AaJu5f5NmuZ7BLoVSS5vBVhPLfMV2Roer+WXAp601qx3m3dO3NDz1Xjanq5hspu4i2+vcOeH7c41PZqb/Ft8auG20M/8tdkvbfIyW+N4N09VQAOas/WbPlPpFz3IocYkJ3BvE6Cr+L3+/dOWf3aDKTYiseNimClz1/jVf7Wycikf1q4vIYVJ2Rii1J7b7CniBrAUQYyNTKjRrKc3bAXzvqnico7laevrL8SdMoYUQF3IY23W1v/ej/XHoLtKWTXjcG9UmxZWvrFv718ED2NEpRLvh17LfyVcTu5TYq1jeTNyRt+IeFnKzIJ7wKaoTahVW5ZrNbNQg+u58VT4KsGRXnXm03Vmrmabe4n1rmY/U6n2BmynXmv6NrzrS6+aN+x5JUy+YYfHizwslKwC2+Eg6VlzdEx00c5QBdJHn6RJtogiaWdYbYCw+C4X761i++oHxxova3Jj2ye3o6JhPJRlUmDvGuJJnZn6UWYnwD1zg6vGlSxO2daRbnHZ+phcWy/LnZnzgWwsQcy4uuWAHzsstiWhnUDIa5DcHXGKLvoCrdOPwbppQXNbBLnnEc7HtAM7UXfEL1qIpJunFOINr07RC+ZXA5LKQYlu4+78ZLpJZKLs7vP7zverShPLZ8PqiSuyyjkrjksAqFPM7zIviN4DwzZUytrVLJLWvYix5o0tecQ1MkuQfXi9MJD59gEdiUdDQn0IsgV4LZyvPzueZ2yi6cXoRfWc+u1Tu4Fsu1s7HLvfrD09kRXRCeY8N/0pJFR73K3AUVvT3S73DIbyXxhFjibUAQUvT2Ht2f8hkKpitmddqTdnUdnHay0Vwt5xoqDxza1b/SCW5du3mmiVkbdijOriSR30q2yBLUCSNgC2WWcJvrnZOATFZ69gppBNOxJBbm69e44euQKxWB9J7t9yf24czVN0KAWXhR21QY0llBTVYLsKpEHDLRUtRpR9fTJ2jS0XMn82XoXEAQOb0oW8LGrpEEn8BaKtTtLNnZ1XeGNP/dc66V3dB6P1GkS3sMApKA6/5zTGod3hGxkQg981UHGGdVwaIYt5DFXm60ah0XBgBtQI8xjztWRGGdUx6V3XdyRec0o+iTmdQT0W49ald0m2jKtjk8akllt2xku4Z56m9uJTWzlXt7tW3pHP72NIN3L4yDmVNgck4XZyA0aZbsJMr0D/TGKpg7PHwLRgA9DM70N+BNAk2p6fV56A/QOlMJ5hbHL8PjPnkb5Hl56Gro+BpktGasTZilU1OOfAm/oDAOXfUrQSxb2veJ7DqalZj4BCd0gArzeldvlDqheZdotQN2sdoC+DliuG8aGrkp2yfQK6IahoYtlV9h6S6dXRDdQS0HLrrBxkSyN2haWgJeeEhClkayqaduJkaGL9zB94uprqm4gpaceVI21H8funv1DZPVOVr3qlMObXcQQTOxrLrhFgOAvoBcju4XxshI9tAJ66B1dMSHYrToUgnfIcoK6cOjfyzxck7HXuuyCMUkSGoK6jO3cyyyJ61ytUaF2vJcAwdSxjh1T63dH/lzNVahSI0xYOPoQudHgRksHVKnJ7xuuB+SY668cdSJqqbtV++crFGq0xbkgtQ0mWdLgvEWt4dG4mRlZISiYDCq6cTlulnG3avdXQ9MXuHcPBvib9OJ80azp+wnzb6UQa/JDE2rtDF+BH7sr8WN3JX7srsSP3ZX4sbsSP3ZX4sfuSvzYXYkfuyuBYxf1RSLC5wbGgP9YViuHbga+sSb5V/wTHgh2E6fURv1s4RWL+hQTEv4jKM1PIsGvBoS4JFNWz8SpoqeRPy5ZfHCyu8V/AeFtlesuTfnbuHyf3J7lU980sXwEN2bjfk8sriF5sClnJ08bOe4Mwa4JzEXfCiy70SXJhDdU9H5zNEDa+lwOfsk5BIf7y4Ttvzpx3VaWHh2etT5/Oi3xVws2L1z44nGya66wAF9c5Zs5RyUKHwwTKzH35iC92yschExEJHuFsF0fpQkHd7lQ3D/dLfBHSpTepa8ZvDxS2rjHbw6H93MdhaUNwJ8s3YKMbsDAiqx61gVeCGiD0L1ueullutcH3yvrdJNEO9Q3pxckvgEj611Xo2yB4AjvxNLM+dmyxen4Bqw/Fx7fTeR1W+5IcLJhRb5zkmDCwWdirxZLkr2qsfaWBst0S15Pf0aMzow3rp3wW7DcsrL3Pc8ZWFfOXCYnOuLIFSkwwm60doxgMGMoWjbT4V42yH05AvTXLa0BA+xat2FKFcPpt3M2Gx5u9uJnGHu0SB3PyPq8Bl/El0ti15rb6JCWsDnn9LfwgqrBvpjIrfyNhb23E8n7qJxC0wm9QmH3vBzDDf60BOspBYX3vlRjkNxMD4adKhFu1VH2MmZVEDWdeyccagcWHJVYEd447HuQ3G2PrBQmLZGWU5A/2vtjqzIKu9H3QGIKm9+C8SryMkWNk5uWOzQ17qfRbuSLP6E44k6eJLvenfTcpUdFZOTW9mthqzFG7qkHou2rnViXoaS2XJAFJ0YaveQ1g6mbMsAF4pF4B17CwZGbbV8Hya2/VsoDMBqpdqgRK443ZcRFpLWJnkQGvEH72L09Cx1kB5fMDFtoooViaK9mYktRureAjZNmlN7Ni1xomQ3rPzL4NunIVszshH0RW6TLfFBIvfAh624cl7KXU+oqQEW4nQy2BqT1bmZzPIuwyTzhtxuA8E5Zdy/hfS134rZbVMSMyWHeipMP05PCqoB6eknC69oWXnkkmHKizFl2i541KR/oZxDigXiZrgaP5qqvlXZT250Al85qsRWkEn8Uj/80nG94ZkuF1x85snin1OymG6x7aHacIRvZvVGvdHNFQCOhIc9s/oTRmmScuPtAee5sy4XXJhcmpIPT0uw4VHYvGxn4fS1XHc9gPpTvVRWSF3NldxkItqtc8gRZ641zNrhrZOvbfD9YiGY+FLv2/uM2kQXyMkm0sSXi/seVxskiwediT9hMI4Gxefh61HvV0XtdzbztieT6Bty3EFIMQBh2L+PbPSruI/QzQTqsruPh2L7j05hLZyPpveLWQ49eu2q86Mb6q1KsKyJUNZPMsExJxQoJDLupyjPZozLtNaNFjbpXxFRPRhMyjLIgBdr205okKNWAT8gL7f9CTo1pbgLtAgAAAABJRU5ErkJggg==" alt="Urban Jungle Bar &amp; Pub">
+  <h1>Sunset The Drop</h1>
+  <div class="subtitle">Control de asistencia en vivo</div>
+</header>
+
+<div class="stats">
+  <div class="stat total">
+    <div class="num" id="statTotal">29</div>
+    <div class="label">Invitados</div>
+  </div>
+  <div class="stat presentes">
+    <div class="num" id="statPresentes">20</div>
+    <div class="label">Presentes</div>
+  </div>
+  <div class="stat pendientes">
+    <div class="num" id="statPendientes">9</div>
+    <div class="label">Pendientes</div>
+  </div>
+</div>
+
+<div class="breakdown">
+  <div class="bd">
+    <span class="tag"><span class="dot org"></span>Orgánicos</span>
+    <span class="count"><b id="orgPresentes">19</b>/<span id="orgTotal">28</span></span>
+  </div>
+  <div class="bd">
+    <span class="tag"><span class="dot anu"></span>Anuncio</span>
+    <span class="count"><b id="anuPresentes">1</b>/<span id="anuTotal">1</span></span>
+  </div>
+</div>
+
+<div class="controls">
+  <input class="search" id="searchInput" type="text" placeholder="Buscar por nombre o teléfono..." autocomplete="off">
+  <div class="filters">
+    <div class="chip" data-filter="todos">Todos</div>
+    <div class="chip active" data-filter="pendientes">Pendientes</div>
+    <div class="chip" data-filter="presentes">Presentes</div>
+    <div class="chip" data-filter="organico">Orgánicos</div>
+    <div class="chip" data-filter="anuncio">Anuncio</div>
+  </div>
+</div>
+
+<div class="list" id="list"><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Maurizio Gana</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3816072658</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Micaela diaz</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">154025944</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Micky loretto</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3814014407</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Nick loreto</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3814014407</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Nick loretto</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3814014407</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Patricio Argañaraz</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3813049850</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Tamara Sandilli</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3816439200</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Tanya Chia</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3813339489</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div><div class="guest">
+        <div class="g-info">
+          <div class="g-name">Yessica Sanchez</div>
+          <div class="g-meta">
+            <span class="badge org">
+              Orgánico
+            </span>
+            <span class="g-phone">3814440007</span>
+            
+          </div>
+        </div>
+        <button class="toggle-btn " aria-label="Marcar asistencia">
+          
+        </button>
+      </div></div>
+
+<div class="toast" id="toast">✔ Ingresó: Mariano Cruz</div>
+
+<script>
+  // ⚠️ Pegá acá la URL /exec que te da Apps Script al implementar como Web App
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMmWkkPh-OrfM0zh6NKa2j8Z62Vv914SdZs_5R4a85MGgGJSuG8eBQ5Ui7Vy_BP30E/exec';
+
+  let allGuests = [];       // organicos + anuncios combinados
+  let currentFilter = 'todos';
+  let searchTerm = '';
+  let jsonpCounter = 0;
+
+  function jsonpRequest(params){
+    return new Promise((resolve, reject) => {
+      const cbName = 'jsonp_cb_' + (jsonpCounter++);
+      const script = document.createElement('script');
+      const query = new URLSearchParams({...params, callback: cbName}).toString();
+
+      window[cbName] = (data) => {
+        resolve(data);
+        delete window[cbName];
+        script.remove();
+      };
+      script.onerror = () => {
+        reject(new Error('Error de red al contactar Apps Script'));
+        delete window[cbName];
+        script.remove();
+      };
+      script.src = APPS_SCRIPT_URL + '?' + query;
+      document.body.appendChild(script);
+    });
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  async function loadGuests(silent){
+    if (!silent){
+      document.getElementById('list').innerHTML =
+        '<div class="loading"><div class="spinner"></div>Cargando invitados...</div>';
+    }
+    try {
+      const data = await jsonpRequest({ action: 'list' });
+      if (data.error) throw new Error(data.error);
+      allGuests = [
+        ...data.organicos.map(g => ({...g, id: g.origen + '-' + g.row})),
+        ...data.anuncios.map(g => ({...g, id: g.origen + '-' + g.row}))
+      ];
+      render();
+    } catch(err){
+      document.getElementById('list').innerHTML =
+        '<div class="empty">No se pudo cargar la lista.<br>' + err.message + '</div>';
+    }
+  }
+
+  async function toggleAsistencia(guest, cardEl){
+    const nuevoEstado = !guest.asistio;
+    cardEl.classList.add('updating');
+
+    // Optimistic UI
+    guest.asistio = nuevoEstado;
+    guest.horaCheckin = nuevoEstado ? 'ahora' : '';
+    render();
+
+    try {
+      // JSONP por GET (evita el bug de fetch+no-cors donde Apps Script
+      // redirige el POST y el navegador lo convierte en GET sin datos)
+      const result = await jsonpRequest({
+        action: 'checkin',
+        origen: guest.origen,
+        row: guest.row,
+        marcar: nuevoEstado
+      });
+      if (result.error) throw new Error(result.error);
+
+      showToast((nuevoEstado ? '✔ Ingresó: ' : '↺ Desmarcado: ') + guest.nombre);
+      // Refresca desde la planilla para tener la hora real de check-in
+      setTimeout(() => loadGuests(true), 500);
+    } catch(err){
+      guest.asistio = !nuevoEstado; // revertir si falla
+      guest.horaCheckin = !nuevoEstado ? guest.horaCheckin : '';
+      showToast('Error al guardar. Reintentá.');
+      render();
+    }
+  }
+
+  function matchesFilter(g){
+    if (currentFilter === 'presentes' && !g.asistio) return false;
+    if (currentFilter === 'pendientes' && g.asistio) return false;
+    if (currentFilter === 'organico' && g.origen !== 'organico') return false;
+    if (currentFilter === 'anuncio' && g.origen !== 'anuncio') return false;
+    if (searchTerm){
+      const t = searchTerm.toLowerCase();
+      return (g.nombre || '').toLowerCase().includes(t) || (g.telefono + '').includes(t);
+    }
+    return true;
+  }
+
+  function render(){
+    // Stats globales
+    const total = allGuests.length;
+    const presentes = allGuests.filter(g => g.asistio).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPresentes').textContent = presentes;
+    document.getElementById('statPendientes').textContent = total - presentes;
+
+    const organicos = allGuests.filter(g => g.origen === 'organico');
+    const anuncios = allGuests.filter(g => g.origen === 'anuncio');
+    document.getElementById('orgTotal').textContent = organicos.length;
+    document.getElementById('orgPresentes').textContent = organicos.filter(g => g.asistio).length;
+    document.getElementById('anuTotal').textContent = anuncios.length;
+    document.getElementById('anuPresentes').textContent = anuncios.filter(g => g.asistio).length;
+
+    // Lista filtrada, ordenada: pendientes primero, luego alfabético
+    const filtered = allGuests.filter(matchesFilter).sort((a, b) => {
+      if (a.asistio !== b.asistio) return a.asistio ? 1 : -1;
+      return (a.nombre || '').localeCompare(b.nombre || '');
+    });
+
+    const listEl = document.getElementById('list');
+    if (filtered.length === 0){
+      listEl.innerHTML = '<div class="empty">No hay invitados que coincidan.</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    filtered.forEach(g => {
+      const card = document.createElement('div');
+      card.className = 'guest' + (g.asistio ? ' presente' : '');
+
+      card.innerHTML = `
+        <div class="g-info">
+          <div class="g-name">${escapeHtml(g.nombre)}</div>
+          <div class="g-meta">
+            <span class="badge ${g.origen === 'organico' ? 'org' : 'anu'}">
+              ${g.origen === 'organico' ? 'Orgánico' : 'Anuncio'}
+            </span>
+            <span class="g-phone">${escapeHtml(g.telefono || '')}</span>
+            ${g.asistio && g.horaCheckin ? `<span class="check-time">· ${escapeHtml(g.horaCheckin)}</span>` : ''}
+          </div>
+        </div>
+        <button class="toggle-btn ${g.asistio ? 'on' : ''}" aria-label="Marcar asistencia">
+          ${g.asistio ? '✓' : ''}
+        </button>
+      `;
+
+      card.querySelector('.toggle-btn').addEventListener('click', () => toggleAsistencia(g, card));
+      listEl.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    return (str + '').replace(/[&<>"']/g, m => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[m]));
+  }
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    searchTerm = e.target.value.trim();
+    render();
+  });
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  // Auto-refresh cada 20s para ver check-ins de otros dispositivos en la puerta
+  loadGuests(false);
+  setInterval(() => loadGuests(true), 20000);
+</script>
+
+
+</body></html>

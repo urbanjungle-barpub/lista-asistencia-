@@ -206,6 +206,22 @@
   .chart-card h3{margin:0 0 14px; font-size:14px; color:var(--text);}
   .chart-wrap{position:relative; height:280px;}
 
+  /* ---- Duplicados ---- */
+  .dup-card{margin-bottom:16px;}
+  .dup-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer;}
+  .dup-row:last-of-type{border-bottom:none;}
+  .dup-row input[type="checkbox"]{width:18px; height:18px; accent-color:var(--orange); flex:0 0 auto; cursor:pointer;}
+  .dup-info{flex:1; min-width:0;}
+  .dup-name{font-weight:700; font-size:14px;}
+  .dup-meta{display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;}
+  .btn-danger{
+    margin-top:12px; padding:10px 16px; border-radius:10px;
+    border:1px solid rgba(255,90,90,.4); background:rgba(255,90,90,.12);
+    color:#ff9d9d; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .btn-danger:hover{background:rgba(255,90,90,.22);}
+  .btn-danger:disabled{opacity:.5; cursor:default;}
+
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
     background:#252041; border:1px solid var(--border); color:var(--text);
@@ -243,6 +259,7 @@
       <button class="nav-btn active" data-view="listado">Listado general</button>
       <button class="nav-btn" data-view="conversion">Conversión</button>
       <button class="nav-btn" data-view="graficos">Gráficos</button>
+      <button class="nav-btn" data-view="duplicados">Duplicados</button>
     </nav>
     <div class="sidebar-footer"><span class="live-dot"></span> En vivo</div>
   </aside>
@@ -254,7 +271,6 @@
       <div class="subtitle">Control de asistencia en vivo</div>
     </header>
 
-    <!-- ===== VISTA: LISTADO GENERAL ===== -->
     <section id="view-listado" class="view active">
       <div class="stats">
         <div class="stat total"><div class="num" id="statTotal">0</div><div class="label">Invitados</div></div>
@@ -275,7 +291,6 @@
       </div>
     </section>
 
-    <!-- ===== VISTA: CONVERSIÓN ===== -->
     <section id="view-conversion" class="view">
       <div class="conv-cards">
         <div class="card"><div class="card-title">Invitados totales</div><div class="num" style="font-size:26px;font-weight:800;" id="convTotal">0</div></div>
@@ -299,7 +314,6 @@
       </div>
     </section>
 
-    <!-- ===== VISTA: GRÁFICOS ===== -->
     <section id="view-graficos" class="view">
       <div class="chart-card">
         <h3>Invitados vs Presentes por lista</h3>
@@ -314,6 +328,11 @@
         <div class="chart-wrap"><canvas id="chartLine"></canvas></div>
       </div>
     </section>
+
+    <section id="view-duplicados" class="view">
+      <div class="card-title" style="margin-bottom:14px;">Detecta invitados con el mismo teléfono o el mismo nombre entre todas las listas. Marcá los que querés borrar y confirmá — se eliminan directamente de la planilla.</div>
+      <div id="dupContainer"></div>
+    </section>
   </main>
 </div>
 
@@ -321,11 +340,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAgF62Z0Wawne8aYOhLPWsTEFJ8dSpEmmRssMLTVUFkv8tdo0SqJBNF5dIMtc0vrAB/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxFlH-a8qlSAe89N4tn2ZWbpntOE0QDzoy0mzpksI0bwk0AiI1o8M4l4cpZbVbjDklYg/exec';
 
-  let allGuests = [];       // lista plana de invitados de TODAS las fuentes
-  let fuentes = [];         // metadatos de cada fuente: {id, label, color}
-  let fuentesMap = {};      // id -> {label, color}
+  let allGuests = [];       
+  let fuentes = [];       
+  let fuentesMap = {};      
   let currentFilter = 'pendientes';
   let currentView = 'listado';
   let searchTerm = '';
@@ -376,19 +395,20 @@
     }[m]));
   }
 
-  /* ---------------- Navegación ---------------- */
+ 
   function switchView(view){
     currentView = view;
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
     if (view === 'conversion') renderConversion();
     if (view === 'graficos') renderGraficos();
+    if (view === 'duplicados') renderDuplicados();
   }
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
 
-  /* ---------------- Carga de datos ---------------- */
+  
   async function loadGuests(silent){
     if (!silent){
       document.getElementById('list').innerHTML =
@@ -408,6 +428,7 @@
       render();
       if (currentView === 'conversion') renderConversion();
       if (currentView === 'graficos') renderGraficos();
+      if (currentView === 'duplicados') renderDuplicados();
     } catch(err){
       document.getElementById('list').innerHTML =
         '<div class="empty">No se pudo cargar la lista.<br>' + escapeHtml(err.message) + '</div>';
@@ -441,7 +462,7 @@
     }
   }
 
-  /* ---------------- Vista: Listado general ---------------- */
+  
   function matchesFilter(g){
     if (currentFilter === 'presentes' && !g.asistio) return false;
     if (currentFilter === 'pendientes' && g.asistio) return false;
@@ -536,7 +557,7 @@
     render();
   });
 
-  /* ---------------- Vista: Conversión ---------------- */
+  
   function renderConversion(){
     const total = allGuests.length;
     const presentes = allGuests.filter(g => g.asistio).length;
@@ -576,7 +597,7 @@
     }).join('');
   }
 
-  /* ---------------- Vista: Gráficos ---------------- */
+  
   function parseHoraCheckin(str){
     if (!str) return null;
     const m = str.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -668,6 +689,124 @@
         }
       }
     });
+  }
+
+  
+  function normalizePhone(p){
+    return (p || '').toString().replace(/\D/g, ''); // solo dígitos
+  }
+  function normalizeName(n){
+    return (n || '').toString().trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // saca tildes
+  }
+
+  function findDuplicates(){
+    
+    const byPhone = {};
+    allGuests.forEach(g => {
+      const key = normalizePhone(g.telefono);
+      if (!key) return;
+      (byPhone[key] = byPhone[key] || []).push(g);
+    });
+    const phoneDupes = Object.values(byPhone).filter(arr => arr.length > 1);
+
+    
+    const byName = {};
+    allGuests.forEach(g => {
+      const key = normalizeName(g.nombre);
+      if (!key) return;
+      (byName[key] = byName[key] || []).push(g);
+    });
+    const nameDupes = Object.values(byName).filter(arr => arr.length > 1)
+      .filter(arr => new Set(arr.map(g => normalizePhone(g.telefono))).size > 1);
+
+    return { phoneDupes, nameDupes };
+  }
+
+  function renderDupGroup(group, groupId){
+    const rows = group.map((g, i) => {
+      const f = fuentesMap[g.origen] || { label: g.origen, color: '#8fb39e' };
+      const checked = i > 0 ? 'checked' : ''; // deja tildado el primero como "el que se queda"
+      return `<label class="dup-row">
+        <input type="checkbox" class="dup-check" data-origen="${g.origen}" data-row="${g.row}" data-group="${groupId}" ${checked}>
+        <div class="dup-info">
+          <div class="dup-name">${escapeHtml(g.nombre)}</div>
+          <div class="dup-meta">
+            <span class="badge" style="background:${hexToRgba(f.color, .18)}; color:${f.color}">${escapeHtml(f.label)}</span>
+            <span class="g-phone">${escapeHtml(g.telefono || '')}</span>
+            ${g.asistio ? '<span class="check-time">· ya ingresó</span>' : ''}
+          </div>
+        </div>
+      </label>`;
+    }).join('');
+
+    return `<div class="card dup-card">
+      ${rows}
+      <button class="btn-danger dup-delete-btn" data-group="${groupId}">Eliminar seleccionados</button>
+    </div>`;
+  }
+
+  function renderDuplicados(){
+    const { phoneDupes, nameDupes } = findDuplicates();
+    const container = document.getElementById('dupContainer');
+
+    if (phoneDupes.length === 0 && nameDupes.length === 0){
+      container.innerHTML = '<div class="empty">No se encontraron nombres ni teléfonos repetidos 🎉</div>';
+      return;
+    }
+
+    let html = '';
+    if (phoneDupes.length){
+      html += `<div class="card-title" style="margin:0 0 10px;">Mismo teléfono (${phoneDupes.length} grupo${phoneDupes.length > 1 ? 's' : ''})</div>`;
+      phoneDupes.forEach((group, gi) => { html += renderDupGroup(group, 'phone-' + gi); });
+    }
+    if (nameDupes.length){
+      html += `<div class="card-title" style="margin:26px 0 10px;">Mismo nombre, teléfono distinto — revisar (${nameDupes.length})</div>`;
+      nameDupes.forEach((group, gi) => { html += renderDupGroup(group, 'name-' + gi); });
+    }
+
+    container.innerHTML = html;
+    wireDupButtons();
+  }
+
+  function wireDupButtons(){
+    document.querySelectorAll('.dup-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const groupId = btn.dataset.group;
+        const checks = document.querySelectorAll(`.dup-check[data-group="${groupId}"]:checked`);
+        if (checks.length === 0){
+          showToast('No seleccionaste ningún invitado para eliminar.');
+          return;
+        }
+        const items = Array.from(checks).map(c => ({ origen: c.dataset.origen, row: parseInt(c.dataset.row, 10) }));
+        const confirmMsg = `¿Eliminar ${items.length} invitado(s) duplicado(s) de la planilla? Esta acción no se puede deshacer.`;
+        if (!confirm(confirmMsg)) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Eliminando...';
+        await deleteGuests(items);
+        showToast('Duplicados eliminados.');
+        await loadGuests(true);
+        renderDuplicados();
+      });
+    });
+  }
+
+  async function deleteGuests(items){
+
+    const byOrigen = {};
+    items.forEach(it => { (byOrigen[it.origen] = byOrigen[it.origen] || []).push(it.row); });
+
+    for (const origen of Object.keys(byOrigen)){
+      const rows = byOrigen[origen].sort((a, b) => b - a);
+      for (const row of rows){
+        try {
+          await jsonpRequest({ action: 'delete', origen, row });
+        } catch (err){
+          console.error('Error eliminando', origen, row, err);
+        }
+      }
+    }
   }
 
   loadGuests(false);

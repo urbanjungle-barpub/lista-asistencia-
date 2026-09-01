@@ -148,6 +148,19 @@
   }
   .search:focus{border-color:var(--orange);}
   .search::placeholder{color:var(--muted);}
+  .btn-export{
+    flex:0 0 auto;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid rgba(61,220,132,.4);
+    background:rgba(61,220,132,.12);
+    color:var(--green);
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-export:hover{background:rgba(61,220,132,.22);}
 
   .filters{display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px;}
   .filters::-webkit-scrollbar{display:none;}
@@ -271,6 +284,7 @@
       <div class="subtitle">Control de asistencia en vivo</div>
     </header>
 
+    <!-- ===== VISTA: LISTADO GENERAL ===== -->
     <section id="view-listado" class="view active">
       <div class="stats">
         <div class="stat total"><div class="num" id="statTotal">0</div><div class="label">Invitados</div></div>
@@ -282,6 +296,7 @@
 
       <div class="controls">
         <input class="search" id="searchInput" type="text" placeholder="Buscar por nombre o teléfono..." autocomplete="off">
+        <button class="btn-export" id="btnExport" title="Descargar nombre y teléfono de todos los invitados">⬇ CSV</button>
       </div>
 
       <div class="filters" id="filterChips"></div>
@@ -291,6 +306,7 @@
       </div>
     </section>
 
+    <!-- ===== VISTA: CONVERSIÓN ===== -->
     <section id="view-conversion" class="view">
       <div class="conv-cards">
         <div class="card"><div class="card-title">Invitados totales</div><div class="num" style="font-size:26px;font-weight:800;" id="convTotal">0</div></div>
@@ -314,6 +330,7 @@
       </div>
     </section>
 
+    <!-- ===== VISTA: GRÁFICOS ===== -->
     <section id="view-graficos" class="view">
       <div class="chart-card">
         <h3>Invitados vs Presentes por lista</h3>
@@ -329,6 +346,7 @@
       </div>
     </section>
 
+    <!-- ===== VISTA: DUPLICADOS ===== -->
     <section id="view-duplicados" class="view">
       <div class="card-title" style="margin-bottom:14px;">Detecta invitados con el mismo teléfono o el mismo nombre entre todas las listas. Marcá los que querés borrar y confirmá — se eliminan directamente de la planilla.</div>
       <div id="dupContainer"></div>
@@ -340,11 +358,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRXvhLD1SFHFTSM1gp_wr5U-L9zgpDDWraCEljhsp0uQ0_Y_11XfpLj-uedIGOl5OTEw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMmWkkPh-OrfM0zh6NKa2j8Z62Vv914SdZs_5R4a85MGgGJSuG8eBQ5Ui7Vy_BP30E/exec';
 
-  let allGuests = [];       
-  let fuentes = [];       
-  let fuentesMap = {};      
+  let allGuests = [];       // lista plana de invitados de TODAS las fuentes
+  let fuentes = [];         // metadatos de cada fuente: {id, label, color}
+  let fuentesMap = {};      // id -> {label, color}
   let currentFilter = 'pendientes';
   let currentView = 'listado';
   let searchTerm = '';
@@ -395,20 +413,26 @@
     }[m]));
   }
 
- 
+  /* ---------------- Navegación ---------------- */
   function switchView(view){
     currentView = view;
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
     if (view === 'conversion') renderConversion();
-    if (view === 'graficos') renderGraficos();
+    if (view === 'graficos') {
+      // Espera al próximo frame para que el navegador termine de calcular
+      // el tamaño real de la sección recién mostrada antes de dibujar los
+      // canvas — si no, Chart.js los mide con alto/ancho ~0 y las escalas
+      // salen rotas.
+      requestAnimationFrame(() => renderGraficos());
+    }
     if (view === 'duplicados') renderDuplicados();
   }
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
 
-  
+  /* ---------------- Carga de datos ---------------- */
   async function loadGuests(silent){
     if (!silent){
       document.getElementById('list').innerHTML =
@@ -462,7 +486,7 @@
     }
   }
 
-  
+  /* ---------------- Vista: Listado general ---------------- */
   function matchesFilter(g){
     if (currentFilter === 'presentes' && !g.asistio) return false;
     if (currentFilter === 'pendientes' && g.asistio) return false;
@@ -557,7 +581,42 @@
     render();
   });
 
-  
+  /* ---------------- Exportar contactos (CSV) ---------------- */
+  function csvEscape(v){
+    const s = (v ?? '').toString();
+    if (/[",\n;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function exportContactsCSV(){
+    if (allGuests.length === 0){
+      showToast('Todavía no hay invitados cargados.');
+      return;
+    }
+    const rows = [['Nombre', 'Telefono', 'Lista', 'Asistio']];
+    allGuests.forEach(g => {
+      const f = fuentesMap[g.origen] || { label: g.origen };
+      rows.push([g.nombre || '', g.telefono || '', f.label, g.asistio ? 'Si' : 'No']);
+    });
+
+    const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM para que Excel muestre bien tildes/ñ
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const fecha = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `invitados_${fecha}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    showToast(`CSV exportado: ${allGuests.length} invitados.`);
+  }
+
+  document.getElementById('btnExport').addEventListener('click', exportContactsCSV);
+
+  /* ---------------- Vista: Conversión ---------------- */
   function renderConversion(){
     const total = allGuests.length;
     const presentes = allGuests.filter(g => g.asistio).length;
@@ -597,7 +656,7 @@
     }).join('');
   }
 
-  
+  /* ---------------- Vista: Gráficos ---------------- */
   function parseHoraCheckin(str){
     if (!str) return null;
     const m = str.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -689,9 +748,17 @@
         }
       }
     });
+
+    // Red de seguridad: si el canvas se midió mal en el primer render,
+    // forzamos un resize una vez que el layout ya está asentado.
+    setTimeout(() => {
+      if (chartBar) chartBar.resize();
+      if (chartPie) chartPie.resize();
+      if (chartLine) chartLine.resize();
+    }, 50);
   }
 
-  
+  /* ---------------- Vista: Duplicados ---------------- */
   function normalizePhone(p){
     return (p || '').toString().replace(/\D/g, ''); // solo dígitos
   }
@@ -701,7 +768,7 @@
   }
 
   function findDuplicates(){
-    
+    // Grupo 1: mismo teléfono (alta confianza, aunque el nombre esté mal escrito)
     const byPhone = {};
     allGuests.forEach(g => {
       const key = normalizePhone(g.telefono);
@@ -710,7 +777,9 @@
     });
     const phoneDupes = Object.values(byPhone).filter(arr => arr.length > 1);
 
-    
+    // Grupo 2: mismo nombre pero teléfono distinto (a revisar, puede ser
+    // coincidencia de nombre o el mismo invitado cargado dos veces con
+    // otro número)
     const byName = {};
     allGuests.forEach(g => {
       const key = normalizeName(g.nombre);
@@ -793,7 +862,8 @@
   }
 
   async function deleteGuests(items){
-
+    // Agrupa por planilla y borra de la fila más alta a la más baja para
+    // que no se desordenen los números de fila entre borrado y borrado.
     const byOrigen = {};
     items.forEach(it => { (byOrigen[it.origen] = byOrigen[it.origen] || []).push(it.row); });
 

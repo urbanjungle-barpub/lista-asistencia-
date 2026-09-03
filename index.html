@@ -114,6 +114,26 @@
     font-weight:800;
   }
   .top-header .subtitle{color:var(--muted); font-size:12px;}
+  .evento-selector{
+    margin-top:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .evento-selector label{font-size:11px; color:var(--muted); letter-spacing:.5px;}
+  .evento-selector select{
+    background:var(--green-dim);
+    color:var(--text);
+    border:1px solid rgba(61,220,132,.35);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    outline:none;
+    max-width:220px;
+  }
 
   .view{display:none;}
   .view.active{display:block;}
@@ -201,6 +221,9 @@
 
   /* ---- Conversión ---- */
   .conv-cards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:22px;}
+  .mkt-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px;}
+  .mkt-num{font-size:22px; font-weight:800; margin-top:4px;}
+  .mkt-num-sm{font-size:19px;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;}
   .card-title{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:20px;}
   .funnel-stage{margin-bottom:14px;}
@@ -258,6 +281,7 @@
     .main{padding:16px 14px 50px;}
     .stats{grid-template-columns:1fr 1fr 1fr;}
     .conv-cards{grid-template-columns:1fr;}
+    .mkt-cards{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
@@ -272,6 +296,7 @@
       <button class="nav-btn active" data-view="listado">Listado general</button>
       <button class="nav-btn" data-view="conversion">Conversión</button>
       <button class="nav-btn" data-view="graficos">Gráficos</button>
+      <button class="nav-btn" data-view="marketing">Marketing</button>
       <button class="nav-btn" data-view="duplicados">Duplicados</button>
     </nav>
     <div class="sidebar-footer"><span class="live-dot"></span> En vivo</div>
@@ -282,6 +307,10 @@
       <div class="subtitle-small">Urban Jungle Bar &amp; Pub</div>
       <h1>Recepción para Eventos</h1>
       <div class="subtitle">Control de asistencia en vivo</div>
+      <div class="evento-selector">
+        <label for="eventoSelect">Evento:</label>
+        <select id="eventoSelect"><option>Cargando...</option></select>
+      </div>
     </header>
 
     <!-- ===== VISTA: LISTADO GENERAL ===== -->
@@ -333,6 +362,16 @@
     <!-- ===== VISTA: GRÁFICOS ===== -->
     <section id="view-graficos" class="view">
       <div class="chart-card">
+        <h3>Comparación entre eventos</h3>
+        <div class="chart-wrap"><canvas id="chartEventos"></canvas></div>
+        <div class="conv-table-wrap" style="margin-top:16px;">
+          <table class="conv-table">
+            <thead><tr><th>Evento</th><th>Invitados</th><th>Presentes</th><th>Tasa</th></tr></thead>
+            <tbody id="eventComparisonTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="chart-card">
         <h3>Invitados vs Presentes por lista</h3>
         <div class="chart-wrap"><canvas id="chartBar"></canvas></div>
       </div>
@@ -343,6 +382,35 @@
       <div class="chart-card">
         <h3>Check-ins acumulados en el tiempo</h3>
         <div class="chart-wrap"><canvas id="chartLine"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ===== VISTA: MARKETING ===== -->
+    <section id="view-marketing" class="view">
+      <div id="mktEmpty" class="empty" style="display:none;">Todavía no cargaste los datos de marketing para este evento (Lead, Ventas, Revenue, Costo) en la planilla.</div>
+
+      <div class="mkt-cards">
+        <div class="card"><div class="card-title">Leads</div><div class="mkt-num" id="mktLead">0</div></div>
+        <div class="card"><div class="card-title">Ventas</div><div class="mkt-num" style="color:var(--green);" id="mktVentas">0</div></div>
+        <div class="card"><div class="card-title">Revenue</div><div class="mkt-num" style="color:var(--gold);" id="mktRevenue">$0</div></div>
+        <div class="card"><div class="card-title">Costo</div><div class="mkt-num" id="mktCosto">$0</div></div>
+      </div>
+
+      <div class="mkt-cards">
+        <div class="card"><div class="card-title">Conversión</div><div class="mkt-num mkt-num-sm" id="mktConversion">0%</div></div>
+        <div class="card"><div class="card-title">Costo x Lead</div><div class="mkt-num mkt-num-sm" id="mktCostoLead">$0</div></div>
+        <div class="card"><div class="card-title">Costo x Venta</div><div class="mkt-num mkt-num-sm" id="mktCostoVenta">$0</div></div>
+        <div class="card"><div class="card-title">ROAS</div><div class="mkt-num mkt-num-sm" style="color:var(--green);" id="mktRoas">0x</div></div>
+      </div>
+
+      <div class="card" style="margin-top:6px;">
+        <div class="card-title">ROAS por evento</div>
+        <div class="conv-table-wrap">
+          <table class="conv-table">
+            <thead><tr><th>Evento</th><th>Leads</th><th>Ventas</th><th>Costo</th><th>Revenue</th><th>ROAS</th></tr></thead>
+            <tbody id="mktComparisonTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -358,17 +426,19 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCJgrlAb95yS9OfKV0-A2tEkJGz0IrSUR9Yp-bQ5EHjj80qfEeKP03NgNX81-Om-fYdw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzS7rIJxMXpQXUuPxMtmFwUsDgqLbZJagtuLOrC_FkKbBsxo_PZgZXymOpl-05oLvc0JA/exec';
 
-  let allGuests = [];       // lista plana de invitados de TODAS las fuentes
+  let allGuests = [];       // lista plana de invitados de TODAS las fuentes (del evento actual)
   let fuentes = [];         // metadatos de cada fuente: {id, label, color}
   let fuentesMap = {};      // id -> {label, color}
+  let eventos = [];         // metadatos de cada evento: {id, label, fecha, actual}
+  let currentEvento = null; // id del evento que se está viendo/operando
   let currentFilter = 'pendientes';
   let currentView = 'listado';
   let searchTerm = '';
   let jsonpCounter = 0;
 
-  let chartBar, chartPie, chartLine;
+  let chartBar, chartPie, chartLine, chartEventos;
 
   function jsonpRequest(params){
     return new Promise((resolve, reject) => {
@@ -424,12 +494,41 @@
       // el tamaño real de la sección recién mostrada antes de dibujar los
       // canvas — si no, Chart.js los mide con alto/ancho ~0 y las escalas
       // salen rotas.
-      requestAnimationFrame(() => renderGraficos());
+      requestAnimationFrame(() => { renderGraficos(); renderEventComparison(); });
     }
     if (view === 'duplicados') renderDuplicados();
+    if (view === 'marketing') renderMarketing();
   }
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  /* ---------------- Eventos ---------------- */
+  async function loadEventos(){
+    try {
+      const data = await jsonpRequest({ action: 'eventos' });
+      eventos = data.eventos || [];
+      currentEvento = data.actual || (eventos[0] && eventos[0].id) || null;
+      renderEventoSelector();
+    } catch(err){
+      console.error('No se pudo cargar la lista de eventos', err);
+    }
+  }
+
+  function renderEventoSelector(){
+    const sel = document.getElementById('eventoSelect');
+    if (eventos.length === 0){
+      sel.innerHTML = '<option>Sin eventos configurados</option>';
+      return;
+    }
+    sel.innerHTML = eventos.map(ev =>
+      `<option value="${ev.id}" ${ev.id === currentEvento ? 'selected' : ''}>${escapeHtml(ev.label)}${ev.actual ? ' (actual)' : ''}</option>`
+    ).join('');
+  }
+
+  document.getElementById('eventoSelect').addEventListener('change', (e) => {
+    currentEvento = e.target.value;
+    loadGuests(false);
   });
 
   /* ---------------- Carga de datos ---------------- */
@@ -439,7 +538,7 @@
         '<div class="loading"><div class="spinner"></div>Cargando invitados...</div>';
     }
     try {
-      const data = await jsonpRequest({ action: 'list' });
+      const data = await jsonpRequest({ action: 'list', evento: currentEvento });
       if (data.error) throw new Error(data.error);
 
       fuentes = data.fuentes || [];
@@ -451,8 +550,9 @@
       renderFilters();
       render();
       if (currentView === 'conversion') renderConversion();
-      if (currentView === 'graficos') renderGraficos();
+      if (currentView === 'graficos') { renderGraficos(); renderEventComparison(); }
       if (currentView === 'duplicados') renderDuplicados();
+      if (currentView === 'marketing') renderMarketing();
     } catch(err){
       document.getElementById('list').innerHTML =
         '<div class="empty">No se pudo cargar la lista.<br>' + escapeHtml(err.message) + '</div>';
@@ -470,6 +570,7 @@
     try {
       const result = await jsonpRequest({
         action: 'checkin',
+        evento: currentEvento,
         origen: guest.origen,
         row: guest.row,
         marcar: nuevoEstado
@@ -762,7 +863,94 @@
       if (chartBar) chartBar.resize();
       if (chartPie) chartPie.resize();
       if (chartLine) chartLine.resize();
+      if (chartEventos) chartEventos.resize();
     }, 50);
+  }
+
+  /* ---------------- Comparación entre eventos ---------------- */
+  async function renderEventComparison(){
+    if (typeof Chart === 'undefined') return;
+
+    let resumen = [];
+    try {
+      const data = await jsonpRequest({ action: 'resumen' });
+      resumen = data.resumen || [];
+    } catch (err) {
+      console.error('No se pudo cargar el resumen de eventos', err);
+      return;
+    }
+
+    const ctx = document.getElementById('chartEventos');
+    if (chartEventos) chartEventos.destroy();
+    chartEventos = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: resumen.map(r => r.label),
+        datasets: [
+          { label: 'Invitados', data: resumen.map(r => r.invitados), backgroundColor: 'rgba(143,179,158,.35)', borderRadius: 6 },
+          { label: 'Presentes', data: resumen.map(r => r.presentes), backgroundColor: '#3ddc84', borderRadius: 6 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#eafff0' } } },
+        scales: {
+          x: { ticks: { color: '#8fb39e' }, grid: { color: 'rgba(255,255,255,.05)' } },
+          y: { ticks: { color: '#8fb39e' }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true }
+        }
+      }
+    });
+    setTimeout(() => { if (chartEventos) chartEventos.resize(); }, 50);
+
+    const tbody = document.getElementById('eventComparisonTableBody');
+    tbody.innerHTML = resumen.map(r => `<tr>
+      <td>${escapeHtml(r.label)} <span style="color:var(--muted); font-size:11px;">(${escapeHtml(r.fecha)})</span></td>
+      <td>${r.invitados}</td>
+      <td>${r.presentes}</td>
+      <td>
+        <span class="mini-bar-wrap"><span class="mini-bar" style="width:${Math.min(r.tasa,100)}%; background:var(--green); display:block;"></span></span>
+        ${r.tasa}%
+      </td>
+    </tr>`).join('');
+  }
+
+  /* ---------------- Vista: Marketing ---------------- */
+  function fmtMoney(n){
+    return '$' + (n || 0).toLocaleString('es-AR');
+  }
+
+  async function renderMarketing(){
+    try {
+      const data = await jsonpRequest({ action: 'marketing', evento: currentEvento });
+
+      document.getElementById('mktEmpty').style.display = data.disponible ? 'none' : 'block';
+      document.getElementById('mktLead').textContent = data.lead || 0;
+      document.getElementById('mktVentas').textContent = data.ventas || 0;
+      document.getElementById('mktRevenue').textContent = fmtMoney(data.revenue);
+      document.getElementById('mktCosto').textContent = fmtMoney(data.costo);
+      document.getElementById('mktConversion').textContent = (data.conversion || 0) + '%';
+      document.getElementById('mktCostoLead').textContent = fmtMoney(data.costoPorLead);
+      document.getElementById('mktCostoVenta').textContent = fmtMoney(data.costoPorVenta);
+      document.getElementById('mktRoas').textContent = (data.roas || 0) + 'x';
+    } catch (err) {
+      console.error('No se pudo cargar marketing', err);
+    }
+
+    try {
+      const resumenData = await jsonpRequest({ action: 'resumenMarketing' });
+      const resumen = resumenData.resumen || [];
+      const tbody = document.getElementById('mktComparisonTableBody');
+      tbody.innerHTML = resumen.map(r => `<tr>
+        <td>${escapeHtml(r.label)}</td>
+        <td>${r.lead || 0}</td>
+        <td>${r.ventas || 0}</td>
+        <td>${fmtMoney(r.costo)}</td>
+        <td>${fmtMoney(r.revenue)}</td>
+        <td>${r.roas || 0}x</td>
+      </tr>`).join('');
+    } catch (err) {
+      console.error('No se pudo cargar comparación de marketing', err);
+    }
   }
 
   /* ---------------- Vista: Duplicados ---------------- */
@@ -878,7 +1066,7 @@
       const rows = byOrigen[origen].sort((a, b) => b - a);
       for (const row of rows){
         try {
-          await jsonpRequest({ action: 'delete', origen, row });
+          await jsonpRequest({ action: 'delete', evento: currentEvento, origen, row });
         } catch (err){
           console.error('Error eliminando', origen, row, err);
         }
@@ -886,8 +1074,11 @@
     }
   }
 
-  loadGuests(false);
-  setInterval(() => loadGuests(true), 20000);
+  (async function init(){
+    await loadEventos();
+    loadGuests(false);
+    setInterval(() => loadGuests(true), 20000);
+  })();
 </script>
 
 </body></html>

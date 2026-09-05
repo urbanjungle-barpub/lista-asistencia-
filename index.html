@@ -134,6 +134,39 @@
     outline:none;
     max-width:220px;
   }
+  .btn-nuevo-evento{
+    width:26px; height:26px; border-radius:50%;
+    border:1px solid rgba(61,220,132,.4);
+    background:rgba(61,220,132,.12);
+    color:var(--green);
+    font-size:15px; font-weight:800; line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .btn-nuevo-evento:hover{background:rgba(61,220,132,.22);}
+  .evento-form{
+    margin-top:14px; padding:14px; border-radius:12px;
+    background:rgba(0,0,0,.15); border:1px solid var(--border);
+    text-align:left; max-width:360px; margin-left:auto; margin-right:auto;
+  }
+  .evento-form input[type="text"]{
+    width:100%; padding:9px 12px; border-radius:10px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); font-size:13px; outline:none; margin-bottom:10px;
+  }
+  .evento-form-dates{display:flex; gap:10px; margin-bottom:10px;}
+  .evento-form-dates label{flex:1; font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;}
+  .evento-form-dates input[type="date"]{
+    padding:8px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); font-size:12.5px; outline:none;
+    color-scheme:dark;
+  }
+  .evento-form-actions{display:flex; gap:8px;}
+  .btn-cancelar{
+    flex:0 0 auto; padding:0 16px; border-radius:14px;
+    border:1px solid var(--border); background:transparent; color:var(--muted);
+    font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .evento-form-hint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.4;}
 
   .view{display:none;}
   .view.active{display:block;}
@@ -222,6 +255,7 @@
   /* ---- Conversión ---- */
   .conv-cards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:22px;}
   .mkt-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px;}
+  .mkt-cards-2{grid-template-columns:1fr 1fr;}
   .mkt-num{font-size:22px; font-weight:800; margin-top:4px;}
   .mkt-num-sm{font-size:19px;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;}
@@ -310,6 +344,20 @@
       <div class="evento-selector">
         <label for="eventoSelect">Evento:</label>
         <select id="eventoSelect"><option>Cargando...</option></select>
+        <button class="btn-nuevo-evento" id="btnNuevoEvento" title="Crear evento nuevo">+</button>
+      </div>
+
+      <div class="evento-form" id="eventoForm" style="display:none;">
+        <input type="text" id="nuevoEventoLabel" placeholder="Nombre del evento (ej: Sunset The Drop)">
+        <div class="evento-form-dates">
+          <label>Desde <input type="date" id="nuevoEventoInicio"></label>
+          <label>Hasta <input type="date" id="nuevoEventoFin"></label>
+        </div>
+        <div class="evento-form-actions">
+          <button class="btn-export" id="btnCrearEvento">Crear evento</button>
+          <button class="btn-cancelar" id="btnCancelarEvento">Cancelar</button>
+        </div>
+        <div class="evento-form-hint">Se van a crear pestañas nuevas (vacías) para este evento en tus 4 planillas de invitados y en la de marketing.</div>
       </div>
     </header>
 
@@ -387,27 +435,25 @@
 
     <!-- ===== VISTA: MARKETING ===== -->
     <section id="view-marketing" class="view">
-      <div id="mktEmpty" class="empty" style="display:none;">Todavía no cargaste los datos de marketing para este evento (Lead, Ventas, Revenue, Costo) en la planilla.</div>
+      <div id="mktEmpty" class="empty" style="display:none;">Todavía no cargaste Ventas y Costo para este evento en la planilla de marketing.</div>
 
       <div class="mkt-cards">
-        <div class="card"><div class="card-title">Leads</div><div class="mkt-num" id="mktLead">0</div></div>
-        <div class="card"><div class="card-title">Ventas</div><div class="mkt-num" style="color:var(--green);" id="mktVentas">0</div></div>
-        <div class="card"><div class="card-title">Revenue</div><div class="mkt-num" style="color:var(--gold);" id="mktRevenue">$0</div></div>
+        <div class="card"><div class="card-title">Leads (invitados)</div><div class="mkt-num" id="mktLead">0</div></div>
+        <div class="card"><div class="card-title">Ventas</div><div class="mkt-num" style="color:var(--green);" id="mktVentas">$0</div></div>
         <div class="card"><div class="card-title">Costo</div><div class="mkt-num" id="mktCosto">$0</div></div>
+        <div class="card"><div class="card-title">ROAS</div><div class="mkt-num" style="color:var(--green);" id="mktRoas">0x</div></div>
       </div>
 
-      <div class="mkt-cards">
-        <div class="card"><div class="card-title">Conversión</div><div class="mkt-num mkt-num-sm" id="mktConversion">0%</div></div>
+      <div class="mkt-cards mkt-cards-2">
         <div class="card"><div class="card-title">Costo x Lead</div><div class="mkt-num mkt-num-sm" id="mktCostoLead">$0</div></div>
-        <div class="card"><div class="card-title">Costo x Venta</div><div class="mkt-num mkt-num-sm" id="mktCostoVenta">$0</div></div>
-        <div class="card"><div class="card-title">ROAS</div><div class="mkt-num mkt-num-sm" style="color:var(--green);" id="mktRoas">0x</div></div>
+        <div class="card"><div class="card-title">Ingreso x Lead</div><div class="mkt-num mkt-num-sm" id="mktIngresoLead">$0</div></div>
       </div>
 
       <div class="card" style="margin-top:6px;">
         <div class="card-title">ROAS por evento</div>
         <div class="conv-table-wrap">
           <table class="conv-table">
-            <thead><tr><th>Evento</th><th>Leads</th><th>Ventas</th><th>Costo</th><th>Revenue</th><th>ROAS</th></tr></thead>
+            <thead><tr><th>Evento</th><th>Leads</th><th>Ventas</th><th>Costo</th><th>ROAS</th></tr></thead>
             <tbody id="mktComparisonTableBody"></tbody>
           </table>
         </div>
@@ -426,7 +472,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvTqaiaPrZN8pM_E6zZRNnzCLVVmK3s3tGsI4XayyoGvbnSmlbwmSSFjgGOw6ogQMsmA/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTVbk_n09k1wme7KIHj4qknEQFM5tMsR10bTLfUJzUfW3c8SwA59dB2UEBsh2iFgwC-A/exec';
 
   let allGuests = [];       // lista plana de invitados de TODAS las fuentes (del evento actual)
   let fuentes = [];         // metadatos de cada fuente: {id, label, color}
@@ -531,6 +577,60 @@
     loadGuests(false);
   });
 
+  /* ---------------- Crear evento nuevo (con calendario) ---------------- */
+  const eventoForm = document.getElementById('eventoForm');
+
+  document.getElementById('btnNuevoEvento').addEventListener('click', () => {
+    const abrir = eventoForm.style.display === 'none';
+    eventoForm.style.display = abrir ? 'block' : 'none';
+    if (abrir) document.getElementById('nuevoEventoLabel').focus();
+  });
+
+  document.getElementById('btnCancelarEvento').addEventListener('click', () => {
+    eventoForm.style.display = 'none';
+  });
+
+  document.getElementById('btnCrearEvento').addEventListener('click', async () => {
+    const label = document.getElementById('nuevoEventoLabel').value.trim();
+    const inicio = document.getElementById('nuevoEventoInicio').value; // 'yyyy-MM-dd'
+    const fin = document.getElementById('nuevoEventoFin').value;
+
+    if (!label || !inicio){
+      showToast('Completá al menos el nombre y la fecha de inicio.');
+      return;
+    }
+
+    const btn = document.getElementById('btnCrearEvento');
+    btn.disabled = true;
+    btn.textContent = 'Creando...';
+
+    try {
+      const result = await jsonpRequest({
+        action: 'crearEvento',
+        label: label,
+        fechaInicio: inicio,
+        fechaFin: fin || inicio
+      });
+      if (result.error) throw new Error(result.error);
+
+      showToast('Evento creado: ' + label);
+      eventoForm.style.display = 'none';
+      document.getElementById('nuevoEventoLabel').value = '';
+      document.getElementById('nuevoEventoInicio').value = '';
+      document.getElementById('nuevoEventoFin').value = '';
+
+      await loadEventos();
+      currentEvento = result.id;
+      renderEventoSelector();
+      loadGuests(false);
+    } catch (err) {
+      showToast('No se pudo crear el evento: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Crear evento';
+    }
+  });
+
   /* ---------------- Carga de datos ---------------- */
   async function loadGuests(silent){
     if (!silent){
@@ -594,7 +694,7 @@
     if (!['todos','pendientes','presentes'].includes(currentFilter) && g.origen !== currentFilter) return false;
     if (searchTerm){
       const t = searchTerm.toLowerCase();
-      return (g.nombre || '').toLowerCase().includes(t) || (g.telefono + '').includes(t);
+      return String(g.nombre || '').toLowerCase().includes(t) || (g.telefono + '').includes(t);
     }
     return true;
   }
@@ -645,7 +745,7 @@
 
     const filtered = allGuests.filter(matchesFilter).sort((a, b) => {
       if (a.asistio !== b.asistio) return a.asistio ? 1 : -1;
-      return (a.nombre || '').localeCompare(b.nombre || '');
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''));
     });
 
     const listEl = document.getElementById('list');
@@ -925,13 +1025,11 @@
 
       document.getElementById('mktEmpty').style.display = data.disponible ? 'none' : 'block';
       document.getElementById('mktLead').textContent = data.lead || 0;
-      document.getElementById('mktVentas').textContent = data.ventas || 0;
-      document.getElementById('mktRevenue').textContent = fmtMoney(data.revenue);
+      document.getElementById('mktVentas').textContent = fmtMoney(data.ventas);
       document.getElementById('mktCosto').textContent = fmtMoney(data.costo);
-      document.getElementById('mktConversion').textContent = (data.conversion || 0) + '%';
-      document.getElementById('mktCostoLead').textContent = fmtMoney(data.costoPorLead);
-      document.getElementById('mktCostoVenta').textContent = fmtMoney(data.costoPorVenta);
       document.getElementById('mktRoas').textContent = (data.roas || 0) + 'x';
+      document.getElementById('mktCostoLead').textContent = fmtMoney(data.costoPorLead);
+      document.getElementById('mktIngresoLead').textContent = fmtMoney(data.ingresoPorLead);
     } catch (err) {
       console.error('No se pudo cargar marketing', err);
     }
@@ -943,9 +1041,8 @@
       tbody.innerHTML = resumen.map(r => `<tr>
         <td>${escapeHtml(r.label)}</td>
         <td>${r.lead || 0}</td>
-        <td>${r.ventas || 0}</td>
+        <td>${fmtMoney(r.ventas)}</td>
         <td>${fmtMoney(r.costo)}</td>
-        <td>${fmtMoney(r.revenue)}</td>
         <td>${r.roas || 0}x</td>
       </tr>`).join('');
     } catch (err) {

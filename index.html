@@ -33,6 +33,7 @@
 
   .app{display:flex; min-height:100vh;}
 
+  /* ---------- SIDEBAR ---------- */
   .sidebar{
     width:var(--sidebar-w);
     flex:0 0 var(--sidebar-w);
@@ -91,7 +92,7 @@
     100%{box-shadow:0 0 0 0 rgba(61,220,132,0);}
   }
 
-  
+  /* ---------- MAIN ---------- */
   .main{flex:1; padding:22px 20px 50px; max-width:1080px; margin:0 auto; width:100%;}
 
   .top-header{
@@ -160,6 +161,17 @@
     color-scheme:dark;
   }
   .evento-form-actions{display:flex; gap:8px;}
+  .evento-form-toggle-label{font-size:11px; color:var(--muted); margin-bottom:8px;}
+  .evento-form-tabs{display:flex; flex-direction:column; gap:8px; margin-bottom:8px;}
+  .evento-form-tabs label{font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;}
+  .evento-form-tabs input[type="text"]{
+    padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); font-size:12.5px; outline:none; margin-bottom:0;
+  }
+  .evento-form-copy{
+    font-size:11px; color:var(--green); cursor:pointer; margin-bottom:12px;
+    text-decoration:underline; text-underline-offset:2px; display:inline-block;
+  }
   .btn-cancelar{
     flex:0 0 auto; padding:0 16px; border-radius:14px;
     border:1px solid var(--border); background:transparent; color:var(--muted);
@@ -170,7 +182,7 @@
   .view{display:none;}
   .view.active{display:block;}
 
-  
+  /* ---- stats / breakdown (Listado) ---- */
   .stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;}
   .stat{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 8px; text-align:center;}
   .stat .num{font-size:22px; font-weight:800; line-height:1;}
@@ -251,7 +263,7 @@
   }
   @keyframes spin{to{transform:rotate(360deg);}}
 
-  
+  /* ---- Conversión ---- */
   .conv-cards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:22px;}
   .mkt-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px;}
   .mkt-cards-2{grid-template-columns:1fr 1fr;}
@@ -270,12 +282,12 @@
   .mini-bar-wrap{display:inline-block; width:70px; height:6px; background:var(--border); border-radius:4px; overflow:hidden; vertical-align:middle; margin-right:6px;}
   .mini-bar{height:100%; border-radius:4px;}
 
-  
+  /* ---- Gráficos ---- */
   .chart-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:20px;}
   .chart-card h3{margin:0 0 14px; font-size:14px; color:var(--text);}
   .chart-wrap{position:relative; height:280px;}
 
-  
+  /* ---- Duplicados ---- */
   .dup-card{margin-bottom:16px;}
   .dup-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer;}
   .dup-row:last-of-type{border-bottom:none;}
@@ -299,7 +311,7 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
-  
+  /* ---- Responsive: sidebar -> top bar en pantallas chicas ---- */
   @media (max-width:800px){
     .app{flex-direction:column;}
     .sidebar{
@@ -352,15 +364,27 @@
           <label>Desde <input type="date" id="nuevoEventoInicio"></label>
           <label>Hasta <input type="date" id="nuevoEventoFin"></label>
         </div>
+
+        <div class="evento-form-toggle-label">Pestaña a usar por lista (vacío = crear una nueva):</div>
+        <div class="evento-form-tabs" id="tabsAvanzado">
+          <label>Pestaña Orgánico <input type="text" id="tabOrganico" placeholder="vacío = crear pestaña nueva"></label>
+          <label>Pestaña Meta ADS <input type="text" id="tabMetaAds" placeholder="vacío = crear pestaña nueva"></label>
+          <label>Pestaña TikTok ADS <input type="text" id="tabTiktokAds" placeholder="vacío = crear pestaña nueva"></label>
+          <label>Pestaña RRHH 1 <input type="text" id="tabRrpp1" placeholder="vacío = crear pestaña nueva"></label>
+          <label>Pestaña RRHH 2 <input type="text" id="tabRrpp2" placeholder="vacío = crear pestaña nueva"></label>
+          <label>Pestaña Marketing <input type="text" id="tabMarketing" placeholder="vacío = crear pestaña nueva"></label>
+        </div>
+        <div class="evento-form-copy" id="btnCopiarTabsActual">📋 Copiar pestañas del evento actual</div>
+
         <div class="evento-form-actions">
           <button class="btn-export" id="btnCrearEvento">Crear evento</button>
           <button class="btn-cancelar" id="btnCancelarEvento">Cancelar</button>
         </div>
-        <div class="evento-form-hint">Se van a crear pestañas nuevas (vacías) para este evento en tus 4 planillas de invitados y en la de marketing.</div>
+        <div class="evento-form-hint">Si dejás una pestaña en blanco, se crea una nueva (vacía) con el nombre de la fecha. Si escribís el nombre de una pestaña que ya existe (ej. "Hoja 1", "Invitados"), la app usa los datos que ya tenía ahí sin tocarla.</div>
       </div>
     </header>
 
-    
+    <!-- ===== VISTA: LISTADO GENERAL ===== -->
     <section id="view-listado" class="view active">
       <div class="stats">
         <div class="stat total"><div class="num" id="statTotal">0</div><div class="label">Invitados</div></div>
@@ -382,7 +406,7 @@
       </div>
     </section>
 
-   
+    <!-- ===== VISTA: CONVERSIÓN ===== -->
     <section id="view-conversion" class="view">
       <div class="conv-cards">
         <div class="card"><div class="card-title">Invitados totales</div><div class="num" style="font-size:26px;font-weight:800;" id="convTotal">0</div></div>
@@ -406,7 +430,7 @@
       </div>
     </section>
 
-    
+    <!-- ===== VISTA: GRÁFICOS ===== -->
     <section id="view-graficos" class="view">
       <div class="chart-card">
         <h3>Comparación entre eventos</h3>
@@ -432,7 +456,7 @@
       </div>
     </section>
 
-    
+    <!-- ===== VISTA: MARKETING ===== -->
     <section id="view-marketing" class="view">
       <div id="mktEmpty" class="empty" style="display:none;">Todavía no cargaste Ventas y Costo para este evento en la planilla de marketing.</div>
 
@@ -459,7 +483,7 @@
       </div>
     </section>
 
-    
+    <!-- ===== VISTA: DUPLICADOS ===== -->
     <section id="view-duplicados" class="view">
       <div class="card-title" style="margin-bottom:14px;">Detecta invitados con el mismo teléfono o el mismo nombre entre todas las listas. Marcá los que querés borrar y confirmá — se eliminan directamente de la planilla.</div>
       <div id="dupContainer"></div>
@@ -471,13 +495,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrkesfQVE1c-T_Sy0gFc9IPpRtl_zVQHSxko9lvNEIzEhpWLLxiVKOvs2mZsk6NSmXww/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFN9odvmIjJ1qeraHHEUp_gRGnLBrCss5R9ucccjKSqatk-RZ3WqssGGJhyyQKdLriIw/exec';
 
-  let allGuests = [];       
-  let fuentes = [];         
-  let fuentesMap = {};      
-  let eventos = [];         
-  let currentEvento = null; 
+  let allGuests = [];       // lista plana de invitados de TODAS las fuentes (del evento actual)
+  let fuentes = [];         // metadatos de cada fuente: {id, label, color}
+  let fuentesMap = {};      // id -> {label, color}
+  let eventos = [];         // metadatos de cada evento: {id, label, fecha, actual}
+  let currentEvento = null; // id del evento que se está viendo/operando
   let currentFilter = 'pendientes';
   let currentView = 'listado';
   let searchTerm = '';
@@ -528,14 +552,17 @@
     }[m]));
   }
 
- 
+  /* ---------------- Navegación ---------------- */
   function switchView(view){
     currentView = view;
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
     if (view === 'conversion') renderConversion();
     if (view === 'graficos') {
-      
+      // Espera al próximo frame para que el navegador termine de calcular
+      // el tamaño real de la sección recién mostrada antes de dibujar los
+      // canvas — si no, Chart.js los mide con alto/ancho ~0 y las escalas
+      // salen rotas.
       requestAnimationFrame(() => { renderGraficos(); renderEventComparison(); });
     }
     if (view === 'duplicados') renderDuplicados();
@@ -545,7 +572,7 @@
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
 
-  
+  /* ---------------- Eventos ---------------- */
   async function loadEventos(){
     try {
       const data = await jsonpRequest({ action: 'eventos' });
@@ -573,17 +600,35 @@
     loadGuests(false);
   });
 
- 
+  /* ---------------- Crear evento nuevo (con calendario) ---------------- */
   const eventoForm = document.getElementById('eventoForm');
+
+  function prefillTabsDesdeEvento(eventoId){
+    const ev = eventos.find(e => e.id === eventoId);
+    document.getElementById('tabOrganico').value = (ev && ev.tabs && ev.tabs.organico) || '';
+    document.getElementById('tabMetaAds').value = (ev && ev.tabs && ev.tabs.meta_ads) || '';
+    document.getElementById('tabTiktokAds').value = (ev && ev.tabs && ev.tabs.tiktok_ads) || '';
+    document.getElementById('tabRrpp1').value = (ev && ev.tabs && ev.tabs.rrpp1) || '';
+    document.getElementById('tabRrpp2').value = (ev && ev.tabs && ev.tabs.rrpp2) || '';
+    document.getElementById('tabMarketing').value = (ev && ev.tabMarketing) || '';
+  }
 
   document.getElementById('btnNuevoEvento').addEventListener('click', () => {
     const abrir = eventoForm.style.display === 'none';
     eventoForm.style.display = abrir ? 'block' : 'none';
-    if (abrir) document.getElementById('nuevoEventoLabel').focus();
+    if (abrir){
+      document.getElementById('nuevoEventoLabel').focus();
+      prefillTabsDesdeEvento(currentEvento);
+    }
   });
 
   document.getElementById('btnCancelarEvento').addEventListener('click', () => {
     eventoForm.style.display = 'none';
+  });
+
+  document.getElementById('btnCopiarTabsActual').addEventListener('click', () => {
+    prefillTabsDesdeEvento(currentEvento);
+    showToast('Copiadas las pestañas del evento seleccionado arriba.');
   });
 
   document.getElementById('btnCrearEvento').addEventListener('click', async () => {
@@ -605,7 +650,13 @@
         action: 'crearEvento',
         label: label,
         fechaInicio: inicio,
-        fechaFin: fin || inicio
+        fechaFin: fin || inicio,
+        tabOrganico: document.getElementById('tabOrganico').value.trim(),
+        tabMetaAds: document.getElementById('tabMetaAds').value.trim(),
+        tabTiktokAds: document.getElementById('tabTiktokAds').value.trim(),
+        tabRrpp1: document.getElementById('tabRrpp1').value.trim(),
+        tabRrpp2: document.getElementById('tabRrpp2').value.trim(),
+        tabMarketing: document.getElementById('tabMarketing').value.trim()
       });
       if (result.error) throw new Error(result.error);
 
@@ -614,6 +665,12 @@
       document.getElementById('nuevoEventoLabel').value = '';
       document.getElementById('nuevoEventoInicio').value = '';
       document.getElementById('nuevoEventoFin').value = '';
+      document.getElementById('tabOrganico').value = '';
+      document.getElementById('tabMetaAds').value = '';
+      document.getElementById('tabTiktokAds').value = '';
+      document.getElementById('tabRrpp1').value = '';
+      document.getElementById('tabRrpp2').value = '';
+      document.getElementById('tabMarketing').value = '';
 
       await loadEventos();
       currentEvento = result.id;
@@ -627,7 +684,7 @@
     }
   });
 
-  
+  /* ---------------- Carga de datos ---------------- */
   async function loadGuests(silent){
     if (!silent){
       document.getElementById('list').innerHTML =
@@ -683,7 +740,7 @@
     }
   }
 
-  
+  /* ---------------- Vista: Listado general ---------------- */
   function matchesFilter(g){
     if (currentFilter === 'presentes' && !g.asistio) return false;
     if (currentFilter === 'pendientes' && g.asistio) return false;
@@ -778,7 +835,7 @@
     render();
   });
 
-
+  /* ---------------- Exportar contactos (CSV) ---------------- */
   function csvEscape(v){
     const s = (v ?? '').toString();
     if (/[",\n;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
@@ -796,11 +853,15 @@
       rows.push([g.nombre || '', g.telefono || '', f.label, g.asistio ? 'Si' : 'No']);
     });
 
-    
+    // Separador ";" (no ",") porque Excel/Sheets en configuración regional
+    // argentina usa la coma como separador decimal, y si el CSV viene
+    // separado por comas mete todo en una sola columna.
+    // "sep=;" como primera línea además le confirma el separador a Excel
+    // sin depender de que adivine la configuración regional.
     const body = rows.map(r => r.map(csvEscape).join(';')).join('\r\n');
     const csv = 'sep=;\r\n' + body;
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); 
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM para que Excel muestre bien tildes/ñ
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const fecha = new Date().toISOString().slice(0, 10);
@@ -816,7 +877,7 @@
 
   document.getElementById('btnExport').addEventListener('click', exportContactsCSV);
 
-  
+  /* ---------------- Vista: Conversión ---------------- */
   function renderConversion(){
     const total = allGuests.length;
     const presentes = allGuests.filter(g => g.asistio).length;
@@ -856,7 +917,7 @@
     }).join('');
   }
 
-  
+  /* ---------------- Vista: Gráficos ---------------- */
   function parseHoraCheckin(str){
     if (!str) return null;
     const m = str.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -949,7 +1010,8 @@
       }
     });
 
-   
+    // Red de seguridad: si el canvas se midió mal en el primer render,
+    // forzamos un resize una vez que el layout ya está asentado.
     setTimeout(() => {
       if (chartBar) chartBar.resize();
       if (chartPie) chartPie.resize();
@@ -958,7 +1020,7 @@
     }, 50);
   }
 
- 
+  /* ---------------- Comparación entre eventos ---------------- */
   async function renderEventComparison(){
     if (typeof Chart === 'undefined') return;
 
@@ -1005,7 +1067,7 @@
     </tr>`).join('');
   }
 
- 
+  /* ---------------- Vista: Marketing ---------------- */
   function fmtMoney(n){
     return '$' + (n || 0).toLocaleString('es-AR');
   }
@@ -1041,7 +1103,7 @@
     }
   }
 
- 
+  /* ---------------- Vista: Duplicados ---------------- */
   function normalizePhone(p){
     return (p || '').toString().replace(/\D/g, ''); // solo dígitos
   }
@@ -1051,7 +1113,7 @@
   }
 
   function findDuplicates(){
-    
+    // Grupo 1: mismo teléfono (alta confianza, aunque el nombre esté mal escrito)
     const byPhone = {};
     allGuests.forEach(g => {
       const key = normalizePhone(g.telefono);
@@ -1060,7 +1122,9 @@
     });
     const phoneDupes = Object.values(byPhone).filter(arr => arr.length > 1);
 
-    
+    // Grupo 2: mismo nombre pero teléfono distinto (a revisar, puede ser
+    // coincidencia de nombre o el mismo invitado cargado dos veces con
+    // otro número)
     const byName = {};
     allGuests.forEach(g => {
       const key = normalizeName(g.nombre);
@@ -1143,7 +1207,8 @@
   }
 
   async function deleteGuests(items){
-   
+    // Agrupa por planilla y borra de la fila más alta a la más baja para
+    // que no se desordenen los números de fila entre borrado y borrado.
     const byOrigen = {};
     items.forEach(it => { (byOrigen[it.origen] = byOrigen[it.origen] || []).push(it.row); });
 

@@ -370,13 +370,8 @@
           <label>Hasta <input type="date" id="nuevoEventoFin"></label>
         </div>
 
-        <div class="evento-form-toggle-label">Pestaña a usar por lista ("➕ Crear nueva" = pestaña en blanco):</div>
+        <div class="evento-form-toggle-label">Pestaña de marketing a usar ("➕ Crear nueva" = pestaña en blanco). Los invitados se filtran solos por fecha, no hace falta elegir pestaña para ellos.</div>
         <div class="evento-form-tabs" id="tabsAvanzado">
-          <label>Pestaña Orgánico <select id="tabOrganico"><option value="">➕ Crear nueva</option></select></label>
-          <label>Pestaña Meta ADS <select id="tabMetaAds"><option value="">➕ Crear nueva</option></select></label>
-          <label>Pestaña TikTok ADS <select id="tabTiktokAds"><option value="">➕ Crear nueva</option></select></label>
-          <label>Pestaña RRHH 1 <select id="tabRrpp1"><option value="">➕ Crear nueva</option></select></label>
-          <label>Pestaña RRHH 2 <select id="tabRrpp2"><option value="">➕ Crear nueva</option></select></label>
           <label>Pestaña Marketing <select id="tabMarketing"><option value="">➕ Crear nueva</option></select></label>
         </div>
         <div class="evento-form-copy" id="btnCopiarTabsActual">📋 Copiar pestañas del evento actual</div>
@@ -500,7 +495,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWJbGGS01Sr5T-OgfEE72O4kG7uAo0ZvDTDEkeU3gbL83SUzlqaC-E4Tjq2B2pNKv2lg/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG__OAIjrmekGwBW3Jh3QtuoXH9nz5roZ7elj_UgdUaGaFJd3RjfAyGseAXir83ReGvQ/exec';
 
   let allGuests = [];       // lista plana de invitados de TODAS las fuentes (del evento actual)
   let fuentes = [];         // metadatos de cada fuente: {id, label, color}
@@ -607,24 +602,18 @@
 
   /* ---------------- Crear evento nuevo (con calendario) ---------------- */
   const eventoForm = document.getElementById('eventoForm');
-  const TAB_SELECT_IDS = {
-    organico: 'tabOrganico', meta_ads: 'tabMetaAds', tiktok_ads: 'tabTiktokAds',
-    rrpp1: 'tabRrpp1', rrpp2: 'tabRrpp2', marketing: 'tabMarketing'
-  };
   let pestanasCache = null;
 
   async function poblarSelectsDePestanas(){
     try {
       const data = await jsonpRequest({ action: 'pestanas' });
       pestanasCache = data.pestanas || {};
-      Object.keys(TAB_SELECT_IDS).forEach(key => {
-        const sel = document.getElementById(TAB_SELECT_IDS[key]);
-        const valorActual = sel.value; // conservamos la selección si ya había una
-        const nombres = pestanasCache[key] || [];
-        sel.innerHTML = '<option value="">➕ Crear nueva</option>' +
-          nombres.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-        sel.value = nombres.includes(valorActual) ? valorActual : '';
-      });
+      const sel = document.getElementById('tabMarketing');
+      const valorActual = sel.value; // conservamos la selección si ya había una
+      const nombres = pestanasCache.marketing || [];
+      sel.innerHTML = '<option value="">➕ Crear nueva</option>' +
+        nombres.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      sel.value = nombres.includes(valorActual) ? valorActual : '';
     } catch (err) {
       console.error('No se pudieron cargar las pestañas existentes', err);
     }
@@ -632,26 +621,17 @@
 
   function prefillTabsDesdeEvento(eventoId){
     const ev = eventos.find(e => e.id === eventoId);
-    const valores = {
-      organico: (ev && ev.tabs && ev.tabs.organico) || '',
-      meta_ads: (ev && ev.tabs && ev.tabs.meta_ads) || '',
-      tiktok_ads: (ev && ev.tabs && ev.tabs.tiktok_ads) || '',
-      rrpp1: (ev && ev.tabs && ev.tabs.rrpp1) || '',
-      rrpp2: (ev && ev.tabs && ev.tabs.rrpp2) || '',
-      marketing: (ev && ev.tabMarketing) || ''
-    };
-    Object.keys(TAB_SELECT_IDS).forEach(key => {
-      const sel = document.getElementById(TAB_SELECT_IDS[key]);
-      // Si la pestaña del evento actual no está en las opciones (recién
-      // se cargaron), la agregamos igual para no perder la selección.
-      if (valores[key] && !Array.from(sel.options).some(o => o.value === valores[key])){
-        const opt = document.createElement('option');
-        opt.value = valores[key];
-        opt.textContent = valores[key];
-        sel.appendChild(opt);
-      }
-      sel.value = valores[key];
-    });
+    const valor = (ev && ev.tabMarketing) || '';
+    const sel = document.getElementById('tabMarketing');
+    // Si la pestaña del evento actual no está en las opciones (recién
+    // se cargaron), la agregamos igual para no perder la selección.
+    if (valor && !Array.from(sel.options).some(o => o.value === valor)){
+      const opt = document.createElement('option');
+      opt.value = valor;
+      opt.textContent = valor;
+      sel.appendChild(opt);
+    }
+    sel.value = valor;
   }
 
   document.getElementById('btnNuevoEvento').addEventListener('click', async () => {
@@ -693,11 +673,6 @@
         label: label,
         fechaInicio: inicio,
         fechaFin: fin || inicio,
-        tabOrganico: document.getElementById('tabOrganico').value,
-        tabMetaAds: document.getElementById('tabMetaAds').value,
-        tabTiktokAds: document.getElementById('tabTiktokAds').value,
-        tabRrpp1: document.getElementById('tabRrpp1').value,
-        tabRrpp2: document.getElementById('tabRrpp2').value,
         tabMarketing: document.getElementById('tabMarketing').value
       });
       if (result.error) throw new Error(result.error);
@@ -707,7 +682,7 @@
       document.getElementById('nuevoEventoLabel').value = '';
       document.getElementById('nuevoEventoInicio').value = '';
       document.getElementById('nuevoEventoFin').value = '';
-      Object.values(TAB_SELECT_IDS).forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('tabMarketing').value = '';
 
       await loadEventos();
       currentEvento = result.id;
